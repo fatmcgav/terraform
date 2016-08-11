@@ -43,11 +43,6 @@ func resourceNetworkingRouterV2() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
-			"availability_zone": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
-			},
 			"external_gateway": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -71,13 +66,12 @@ func resourceNetworkingRouterV2() *schema.Resource {
 // routerCreateOpts contains all the values needed to create a new router. There are
 // no required values.
 type RouterCreateOpts struct {
-	Name             string
-	AdminStateUp     *bool
-	Distributed      *bool
-	TenantID         string
-	AvailabilityZone string
-	GatewayInfo      *routers.GatewayInfo
-	ValueSpecs       map[string]string
+	Name         string
+	AdminStateUp *bool
+	Distributed  *bool
+	TenantID     string
+	GatewayInfo  *routers.GatewayInfo
+	ValueSpecs   map[string]string
 }
 
 // ToRouterCreateMap casts a routerCreateOpts struct to a map.
@@ -98,10 +92,6 @@ func (opts RouterCreateOpts) ToRouterCreateMap() (map[string]interface{}, error)
 
 	if gophercloud.MaybeString(opts.TenantID) != nil {
 		r["tenant_id"] = opts.TenantID
-	}
-
-	if gophercloud.MaybeString(opts.AvailabilityZone) != nil {
-		r["availability_zone"] = opts.AvailabilityZone
 	}
 
 	if opts.GatewayInfo != nil {
@@ -138,11 +128,6 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 	if dRaw, ok := d.GetOk("distributed"); ok {
 		d := dRaw.(bool)
 		createOpts.Distributed = &d
-	}
-
-	availabilityZone := d.Get("availability_zone").(string)
-	if availabilityZone != "" {
-		createOpts.AvailabilityZone = availabilityZone
 	}
 
 	externalGateway := d.Get("external_gateway").(string)
