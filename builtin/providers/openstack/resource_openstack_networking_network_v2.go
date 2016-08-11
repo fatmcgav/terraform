@@ -47,11 +47,6 @@ func resourceNetworkingNetworkV2() *schema.Resource {
 				ForceNew: false,
 				Computed: true,
 			},
-			"availability_zone": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"tenant_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,11 +85,6 @@ func resourceNetworkingNetworkV2Create(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("shared, if provided, must be either 'true' or 'false': %v", err)
 		}
 		createOpts.Shared = &shared
-	}
-
-	availabilityZone := d.Get("availability_zone").(string)
-	if availabilityZone != "" {
-		createOpts.AvailabilityZone = availabilityZone
 	}
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
