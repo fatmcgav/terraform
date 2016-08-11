@@ -25,6 +25,8 @@ type networkOpts struct {
 	Name         string
 	Shared       *bool
 	TenantID     string
+	// GW - Addition to support creating network in specific AZ on K5
+	AvailabilityZone string
 }
 
 // ListOptsBuilder allows extensions to add additional parameters to the
@@ -112,6 +114,10 @@ func (opts CreateOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 	}
 	if opts.TenantID != "" {
 		n["tenant_id"] = opts.TenantID
+	}
+	// GW - Added to support K5 Availaity Zone creation
+	if opts.AvailabilityZone != "" {
+		n["availability_zone"] = opts.AvailabilityZone
 	}
 
 	return map[string]interface{}{"network": n}, nil
