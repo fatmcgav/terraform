@@ -52,12 +52,14 @@ type CreateOptsBuilder interface {
 
 // CreateOpts contains all the values needed to create a new router. There are
 // no required values.
+// GW - Patched to support specifying AZ on creation
 type CreateOpts struct {
-	Name         string
-	AdminStateUp *bool
-	Distributed  *bool
-	TenantID     string
-	GatewayInfo  *GatewayInfo
+	Name             string
+	AdminStateUp     *bool
+	Distributed      *bool
+	TenantID         string
+	AvailabilityZone string
+	GatewayInfo      *GatewayInfo
 }
 
 // ToRouterCreateMap casts a CreateOpts struct to a map.
@@ -78,6 +80,11 @@ func (opts CreateOpts) ToRouterCreateMap() (map[string]interface{}, error) {
 
 	if gophercloud.MaybeString(opts.TenantID) != nil {
 		r["tenant_id"] = opts.TenantID
+	}
+
+	// GW - Added support for AvailabilityZone option
+	if gophercloud.MaybeString(opts.AvailabilityZone) != nil {
+		r["availability_zone"] = opts.AvailabilityZone
 	}
 
 	if opts.GatewayInfo != nil {
