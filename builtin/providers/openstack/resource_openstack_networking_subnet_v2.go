@@ -68,15 +68,16 @@ func resourceNetworkingSubnetV2() *schema.Resource {
 				},
 			},
 			"gateway_ip": &schema.Schema{
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: false,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"no_gateway"},
 			},
 			"no_gateway": &schema.Schema{
-				Type:       schema.TypeBool,
-				Optional:   true,
-				ForceNew:   false,
-				Deprecated: "This argument is no longer required. Instead, omit gateway_ip or set it to an empty string",
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ForceNew:      false,
+				ConflictsWith: []string{"gateway_ip"},
 			},
 			"ip_version": &schema.Schema{
 				Type:     schema.TypeInt,
@@ -144,26 +145,26 @@ func resourceNetworkingSubnetV2Create(d *schema.ResourceData, meta interface{}) 
 		subnetValueSpecs(d),
 	}
 
+	noGateway := d.Get("no_gateway").(bool)
 	if v, ok := d.GetOk("gateway_ip"); ok {
-		noGateway := d.Get("no_gateway").(bool)
-		if noGateway {
-			return fmt.Errorf("Both gateway_ip and no_gateway cannot be set.")
-		}
-
 		gatewayIP := v.(string)
 		createOpts.GatewayIP = &gatewayIP
 	}
 
-	if v, ok := d.GetOk("enable_dhcp"); ok {
-		enableDHCP := v.(bool)
-		createOpts.EnableDHCP = &enableDHCP
+	if noGateway {
+		gatewayIP := ""
+		createOpts.GatewayIP = &gatewayIP
 	}
+
+	enableDHCP := d.Get("enable_dhcp").(bool)
+	createOpts.EnableDHCP = &enableDHCP
 
 	if v, ok := d.GetOk("ip_version"); ok {
 		ipVersion := resourceNetworkingSubnetV2DetermineIPVersion(v.(int))
 		createOpts.IPVersion = ipVersion
 	}
 
+	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	s, err := subnets.Create(networkingClient, createOpts).Extract()
 	if err != nil {
 		return fmt.Errorf("Error creating OpenStack Neutron subnet: %s", err)
@@ -222,14 +223,6 @@ func resourceNetworkingSubnetV2Update(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error creating OpenStack networking client: %s", err)
 	}
 
-	// Check if both gateway_ip and no_gateway are set
-	if _, ok := d.GetOk("gateway_ip"); ok {
-		noGateway := d.Get("no_gateway").(bool)
-		if noGateway {
-			return fmt.Errorf("Both gateway_ip and no_gateway cannot be set.")
-		}
-	}
-
 	var updateOpts subnets.UpdateOpts
 
 	if d.HasChange("name") {
@@ -237,18 +230,18 @@ func resourceNetworkingSubnetV2Update(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("gateway_ip") {
-		updateOpts.GatewayIP = nil
+		//updateOpts.GatewayIP = nil
 		if v, ok := d.GetOk("gateway_ip"); ok {
 			gatewayIP := v.(string)
-			updateOpts.GatewayIP = &gatewayIP
+			updateOpts.GatewayIP = gatewayIP
+			//updateOpts.GatewayIP = &gatewayIP
 		}
 	}
 
 	if d.HasChange("no_gateway") {
-		noGateway := d.Get("no_gateway").(bool)
-		if noGateway {
-			updateOpts.GatewayIP = nil
-		}
+		//gatewayIP := ""
+		//updateOpts.GatewayIP = &gatewayIP
+		updateOpts.GatewayIP = ""
 	}
 
 	if d.HasChange("dns_nameservers") {

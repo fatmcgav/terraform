@@ -186,8 +186,8 @@ func resourceFWPolicyV1Delete(d *schema.ResourceData, meta interface{}) error {
 			break
 		}
 
-		if _, ok := err.(gophercloud.ErrDefault404); ok {
-			return nil
+		if _, ok := err.(gophercloud.ErrDefault404); !ok {
+			return err
 		}
 
 		if errCode, ok := err.(gophercloud.ErrUnexpectedResponseCode); ok {
