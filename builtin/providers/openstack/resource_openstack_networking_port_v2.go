@@ -115,6 +115,11 @@ func resourceNetworkingPortV2() *schema.Resource {
 					},
 				},
 			},
+			"value_specs": &schema.Schema{
+				Type:     schema.TypeMap,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -126,17 +131,20 @@ func resourceNetworkingPortV2Create(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error creating OpenStack networking client: %s", err)
 	}
 
-	createOpts := ports.CreateOpts{
-		Name:                d.Get("name").(string),
-		AdminStateUp:        resourcePortAdminStateUpV2(d),
-		NetworkID:           d.Get("network_id").(string),
-		MACAddress:          d.Get("mac_address").(string),
-		TenantID:            d.Get("tenant_id").(string),
-		DeviceOwner:         d.Get("device_owner").(string),
-		SecurityGroups:      resourcePortSecurityGroupsV2(d),
-		DeviceID:            d.Get("device_id").(string),
-		FixedIPs:            resourcePortFixedIpsV2(d),
-		AllowedAddressPairs: resourceAllowedAddressPairsV2(d),
+	createOpts := PortCreateOpts{
+		ports.CreateOpts{
+			Name:                d.Get("name").(string),
+			AdminStateUp:        resourcePortAdminStateUpV2(d),
+			NetworkID:           d.Get("network_id").(string),
+			MACAddress:          d.Get("mac_address").(string),
+			TenantID:            d.Get("tenant_id").(string),
+			DeviceOwner:         d.Get("device_owner").(string),
+			SecurityGroups:      resourcePortSecurityGroupsV2(d),
+			DeviceID:            d.Get("device_id").(string),
+			FixedIPs:            resourcePortFixedIpsV2(d),
+			AllowedAddressPairs: resourceAllowedAddressPairsV2(d),
+		},
+		portValueSpecs(d),
 	}
 
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
@@ -378,4 +386,12 @@ func waitForNetworkPortDelete(networkingClient *gophercloud.ServiceClient, portI
 		log.Printf("[DEBUG] OpenStack Port %s still active.\n", portId)
 		return p, "ACTIVE", nil
 	}
+}
+
+func portValueSpecs(d *schema.ResourceData) map[string]string {
+	m := make(map[string]string)
+	for key, val := range d.Get("value_specs").(map[string]interface{}) {
+		m[key] = val.(string)
+	}
+	return m
 }
