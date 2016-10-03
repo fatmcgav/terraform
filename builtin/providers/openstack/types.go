@@ -61,17 +61,5 @@ type PortCreateOpts struct {
 // ToPortCreateMap casts a CreateOpts struct to a map.
 // It overrides ports.ToPortCreateMap to add the ValueSpecs field.
 func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
-	b, err := gophercloud.BuildRequestBody(opts, "")
-	if err != nil {
-		return nil, err
-	}
-
-	if opts.ValueSpecs != nil {
-		for k, v := range opts.ValueSpecs {
-			b[k] = v
-		}
-		delete(b, "value_specs")
-	}
-
-	return map[string]interface{}{"port": b}, nil
+	return BuildRequest(opts, "port")
 }
