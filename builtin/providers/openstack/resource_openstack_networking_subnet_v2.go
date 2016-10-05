@@ -142,7 +142,7 @@ func resourceNetworkingSubnetV2Create(d *schema.ResourceData, meta interface{}) 
 			HostRoutes:      resourceSubnetHostRoutesV2(d),
 			EnableDHCP:      nil,
 		},
-		subnetValueSpecs(d),
+		MapValueSpecs(d),
 	}
 
 	noGateway := d.Get("no_gateway").(bool)
@@ -376,12 +376,4 @@ func waitForSubnetDelete(networkingClient *gophercloud.ServiceClient, subnetId s
 		log.Printf("[DEBUG] OpenStack Subnet %s still active.\n", subnetId)
 		return s, "ACTIVE", nil
 	}
-}
-
-func subnetValueSpecs(d *schema.ResourceData) map[string]string {
-	m := make(map[string]string)
-	for key, val := range d.Get("value_specs").(map[string]interface{}) {
-		m[key] = val.(string)
-	}
-	return m
 }
