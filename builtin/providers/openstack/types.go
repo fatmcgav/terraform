@@ -1,8 +1,10 @@
 package openstack
 
 import (
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/ports"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
 
@@ -40,4 +42,28 @@ type SubnetCreateOpts struct {
 // It overrides subnets.ToSubnetCreateMap to add the ValueSpecs field.
 func (opts SubnetCreateOpts) ToSubnetCreateMap() (map[string]interface{}, error) {
 	return BuildRequest(opts, "subnet")
+}
+
+// PortCreateOpts represents the attributes used when creating a new port.
+type PortCreateOpts struct {
+	ports.CreateOpts
+	ValueSpecs map[string]string `json:"value_specs,omitempty"`
+}
+
+// ToPortCreateMap casts a CreateOpts struct to a map.
+// It overrides ports.ToPortCreateMap to add the ValueSpecs field.
+func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
+	return BuildRequest(opts, "port")
+}
+
+// FloatingIPCreateOpts represents the attributes used when creating a new port.
+type FloatingIPCreateOpts struct {
+	floatingips.CreateOpts
+	ValueSpecs map[string]string `json:"value_specs,omitempty"`
+}
+
+// ToFloatingIPCreateMap casts a CreateOpts struct to a map.
+// It overrides floatingips.ToFloatingIPCreateMap to add the ValueSpecs field.
+func (opts FloatingIPCreateOpts) ToFloatingIPCreateMap() (map[string]interface{}, error) {
+	return BuildRequest(opts, "floatingip")
 }
