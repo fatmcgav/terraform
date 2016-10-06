@@ -1,7 +1,6 @@
 package openstack
 
 import (
-	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/floatingips"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/layer3/routers"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/networks"
@@ -76,6 +75,7 @@ type FloatingIPCreateOpts struct {
 // It overrides floatingips.ToFloatingIPCreateMap to add the ValueSpecs field.
 func (opts FloatingIPCreateOpts) ToFloatingIPCreateMap() (map[string]interface{}, error) {
 	return BuildRequest(opts, "floatingip")
+}
 
 // RouterCreateOpts represents the attributes used when creating a new router.
 type RouterCreateOpts struct {
