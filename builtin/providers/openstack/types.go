@@ -64,27 +64,3 @@ type PortCreateOpts struct {
 func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
 	return BuildRequest(opts, "port")
 }
-
-// FloatingIPCreateOpts represents the attributes used when creating a new port.
-type FloatingIPCreateOpts struct {
-	floatingips.CreateOpts
-	ValueSpecs map[string]string `json:"value_specs,omitempty"`
-}
-
-// ToFloatingIPCreateMap casts a CreateOpts struct to a map.
-// It overrides floatingips.ToFloatingIPCreateMap to add the ValueSpecs field.
-func (opts FloatingIPCreateOpts) ToFloatingIPCreateMap() (map[string]interface{}, error) {
-	return BuildRequest(opts, "floatingip")
-}
-
-// RouterCreateOpts represents the attributes used when creating a new router.
-type RouterCreateOpts struct {
-	routers.CreateOpts
-	ValueSpecs map[string]string `json:"value_specs,omitempty"`
-}
-
-// ToRouterCreateMap casts a CreateOpts struct to a map.
-// It overrides routers.ToRouterCreateMap to add the ValueSpecs field.
-func (opts RouterCreateOpts) ToRouterCreateMap() (map[string]interface{}, error) {
-	return BuildRequest(opts, "router")
-}
