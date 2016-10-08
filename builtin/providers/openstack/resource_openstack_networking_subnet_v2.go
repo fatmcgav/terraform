@@ -230,18 +230,18 @@ func resourceNetworkingSubnetV2Update(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("gateway_ip") {
-		//updateOpts.GatewayIP = nil
+		updateOpts.GatewayIP = nil
 		if v, ok := d.GetOk("gateway_ip"); ok {
 			gatewayIP := v.(string)
-			updateOpts.GatewayIP = gatewayIP
-			//updateOpts.GatewayIP = &gatewayIP
+			updateOpts.GatewayIP = &gatewayIP
 		}
 	}
 
 	if d.HasChange("no_gateway") {
-		//gatewayIP := ""
-		//updateOpts.GatewayIP = &gatewayIP
-		updateOpts.GatewayIP = ""
+		if d.Get("no_gateway").(bool) {
+			gatewayIP := ""
+			updateOpts.GatewayIP = &gatewayIP
+		}
 	}
 
 	if d.HasChange("dns_nameservers") {
