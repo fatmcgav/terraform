@@ -88,14 +88,6 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 		createOpts.Distributed = &d
 	}
 
-	externalGateway := d.Get("external_gateway").(string)
-	if externalGateway != "" {
-		gatewayInfo := routers.GatewayInfo{
-			NetworkID: externalGateway,
-		}
-		createOpts.GatewayInfo = &gatewayInfo
-	}
-
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	n, err := routers.Create(networkingClient, createOpts).Extract()
 	if err != nil {
@@ -116,6 +108,24 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 	_, err = stateConf.WaitForState()
 
 	d.SetId(n.ID)
+
+	// GW - Hack to set External Gateway config AFTER creating router, as K5
+	// can't perform this as one idempotent task!!!
+	externalGateway := d.Get("external_gateway").(string)
+	if externalGateway != "" {
+		var updateOpts routers.UpdateOpts
+		gatewayInfo := routers.GatewayInfo{
+			NetworkID: externalGateway,
+		}
+		updateOpts.GatewayInfo = &gatewayInfo
+
+		log.Printf("[DEBUG] Assigning external gateway to Router %s with options: %+v", d.Id(), updateOpts)
+
+		_, err = routers.Update(networkingClient, d.Id(), updateOpts).Extract()
+		if err != nil {
+			return fmt.Errorf("Error updating OpenStack Neutron Router: %s", err)
+		}
+	}
 
 	return resourceNetworkingRouterV2Read(d, meta)
 }
