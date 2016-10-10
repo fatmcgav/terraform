@@ -8,6 +8,18 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/subnets"
 )
 
+// FloatingIPCreateOpts represents the attributes used when creating a new port.
+type FloatingIPCreateOpts struct {
+	floatingips.CreateOpts
+	ValueSpecs map[string]string `json:"value_specs,omitempty"`
+}
+
+// ToFloatingIPCreateMap casts a CreateOpts struct to a map.
+// It overrides floatingips.ToFloatingIPCreateMap to add the ValueSpecs field.
+func (opts FloatingIPCreateOpts) ToFloatingIPCreateMap() (map[string]interface{}, error) {
+	return BuildRequest(opts, "floatingip")
+}
+
 // NetworkCreateOpts represents the attributes used when creating a new network.
 type NetworkCreateOpts struct {
 	networks.CreateOpts
@@ -18,6 +30,18 @@ type NetworkCreateOpts struct {
 // It overrides networks.ToNetworkCreateMap to add the ValueSpecs field.
 func (opts NetworkCreateOpts) ToNetworkCreateMap() (map[string]interface{}, error) {
 	return BuildRequest(opts, "network")
+}
+
+// PortCreateOpts represents the attributes used when creating a new port.
+type PortCreateOpts struct {
+	ports.CreateOpts
+	ValueSpecs map[string]string `json:"value_specs,omitempty"`
+}
+
+// ToPortCreateMap casts a CreateOpts struct to a map.
+// It overrides ports.ToPortCreateMap to add the ValueSpecs field.
+func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
+	return BuildRequest(opts, "port")
 }
 
 // RouterCreateOpts represents the attributes used when creating a new router.
@@ -51,16 +75,4 @@ func (opts SubnetCreateOpts) ToSubnetCreateMap() (map[string]interface{}, error)
 	}
 
 	return b, nil
-}
-
-// PortCreateOpts represents the attributes used when creating a new port.
-type PortCreateOpts struct {
-	ports.CreateOpts
-	ValueSpecs map[string]string `json:"value_specs,omitempty"`
-}
-
-// ToPortCreateMap casts a CreateOpts struct to a map.
-// It overrides ports.ToPortCreateMap to add the ValueSpecs field.
-func (opts PortCreateOpts) ToPortCreateMap() (map[string]interface{}, error) {
-	return BuildRequest(opts, "port")
 }
