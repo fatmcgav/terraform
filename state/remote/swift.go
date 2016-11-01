@@ -21,8 +21,9 @@ const TFSTATE_NAME = "tfstate.tf"
 
 // SwiftClient implements the Client interface for an Openstack Swift server.
 type SwiftClient struct {
-	client *gophercloud.ServiceClient
-	path   string
+	client   *gophercloud.ServiceClient
+	path     string
+	insecure bool
 }
 
 func swiftFactory(conf map[string]string) (Client, error) {
@@ -52,7 +53,10 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	if !ok || path == "" {
 		return fmt.Errorf("missing 'path' configuration")
 	}
-
+	c.insecure, ok := conf["insecure"].(bool)
+	if !ok {
+		return fmt.Errorf("invalid 'insecure' configuration")
+	}
 
 	ao := gophercloud.AuthOptions{
 		IdentityEndpoint: os.Getenv("OS_AUTH_URL"),
@@ -69,15 +73,8 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	}
 
 	config := &tls.Config{}
-	insecure := false
-	if insecure_env := os.Getenv("OS_INSECURE"); insecure_env != "" {
-		insecure, err = strconv.ParseBool(insecure_env)
-		if err != nil {
-			return err
-		}
-	}
 
-	if insecure {
+	if c.insecure {
 		log.Printf("[DEBUG] Insecure mode set")
 		config.InsecureSkipVerify = true
 	}
