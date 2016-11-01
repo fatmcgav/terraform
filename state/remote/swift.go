@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
@@ -53,10 +52,18 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	if !ok || path == "" {
 		return fmt.Errorf("missing 'path' configuration")
 	}
-	c.insecure, ok := conf["insecure"].(bool)
+	insecure, ok := conf["insecure"]
 	if !ok {
-		return fmt.Errorf("invalid 'insecure' configuration")
+		insecure = os.Getenv("OS_INSECURE")
+		if insecure == "" {
+			insecure = false
+		}
 	}
+	insecureBool, err := strconv.ParseBool(insecure)
+	if err != nil {
+		return fmt.Errorf("non-boolean 'insecure' value")
+	}
+	c.insecure = insecureBool
 
 	ao := gophercloud.AuthOptions{
 		IdentityEndpoint: os.Getenv("OS_AUTH_URL"),
