@@ -12,7 +12,7 @@ Stores the state as an artifact in [Swift](http://docs.openstack.org/developer/s
 
 -> **Note:** Passing credentials directly via configuration options will
 make them included in cleartext inside the persisted state. Use of
-environment variables.
+environment variables is recommended.
 
 ## Example Usage
 
