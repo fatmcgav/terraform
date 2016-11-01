@@ -56,7 +56,8 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	if !ok {
 		insecure = os.Getenv("OS_INSECURE")
 		if insecure == "" {
-			insecure = false
+			// Default if no conf or Env variable set
+			insecure = "false"
 		}
 	}
 	insecureBool, err := strconv.ParseBool(insecure)
