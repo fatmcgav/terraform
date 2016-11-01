@@ -20,9 +20,17 @@ const TFSTATE_NAME = "tfstate.tf"
 
 // SwiftClient implements the Client interface for an Openstack Swift server.
 type SwiftClient struct {
-	client   *gophercloud.ServiceClient
-	path     string
-	insecure bool
+	client     *gophercloud.ServiceClient
+	authurl    string
+	username   string
+	password   string
+	region     string
+	tenantid   string
+	tenantname string
+	domainid   string
+	domainname string
+	path       string
+	insecure   bool
 }
 
 func swiftFactory(conf map[string]string) (Client, error) {
@@ -36,22 +44,96 @@ func swiftFactory(conf map[string]string) (Client, error) {
 }
 
 func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
-	if val := os.Getenv("OS_AUTH_URL"); val == "" {
-		return fmt.Errorf("missing OS_AUTH_URL environment variable")
+	authUrl, ok := conf["auth_url"]
+	if !ok {
+		authUrl = os.Getenv("OS_AUTH_URL")
+		if authUrl == "" {
+			return fmt.Errorf("missing 'auth_url' configuration or OS_AUTH_URL environment variable")
+		}
 	}
-	if val := os.Getenv("OS_USERNAME"); val == "" {
-		return fmt.Errorf("missing OS_USERNAME environment variable")
+	c.authurl = authUrl
+
+	username, ok := conf["user_name"]
+	if !ok {
+		username = os.Getenv("OS_USERNAME")
 	}
-	if val := os.Getenv("OS_TENANT_NAME"); val == "" {
-		return fmt.Errorf("missing OS_TENANT_NAME environment variable")
+	c.username = username
+
+	userID, ok := conf["user_id"]
+	if !ok {
+		userID = os.Getenv("OS_USER_ID")
 	}
-	if val := os.Getenv("OS_PASSWORD"); val == "" {
-		return fmt.Errorf("missing OS_PASSWORD environment variable")
+	c.userid = userID
+
+	password, ok := conf["password"]
+	if !ok {
+		password = os.Getenv("OS_PASSWORD")
+		if password == "" {
+			return fmt.Errorf("missing 'password' configuration or OS_PASSWORD environment variable")
+		}
 	}
+	c.password = password
+
+	region, ok := conf["region_name"]
+	if !ok {
+		region = os.Getenv("OS_REGION_NAME")
+		if region == "" {
+			return fmt.Errorf("missing 'region_name' configuration or OS_REGION_NAME environment variable")
+		}
+	}
+	c.region = region
+
+	tenantID, ok := conf["tenant_id"]
+	if !ok {
+		tenantID = os.Getenv("OS_TENANT_ID")
+		if tenantID == "" {
+			tenantID = os.Getenv("OS_PROJECT_ID")
+		}
+	}
+	c.tenantid = tenantID
+
+	tenantName, ok := conf["tenant_name"]
+	if !ok {
+		tenantName = os.Getenv("OS_TENANT_NAME")
+		if tenantName == "" {
+			tenantName = os.Getenv("OS_PROJECT_NAME")
+		}
+	}
+	c.tenantname = tenantName
+
+	domainID, ok := conf["domain_id"]
+	if !ok {
+		domainID = os.Getenv("OS_USER_DOMAIN_ID")
+		if domainID == "" {
+			domainID = os.Getenv("OS_PROJECT_DOMAIN_ID")
+			if domainID == "" {
+				domainID = os.Getenv("OS_DOMAIN_ID")
+			}
+		}
+	}
+	c.domainid = domainID
+
+	domainName, ok := conf["domain_name"]
+	if !ok {
+		domainName = os.Getenv("OS_USER_DOMAIN_NAME")
+		if domainName == "" {
+			domainName = os.Getenv("OS_PROJECT_DOMAIN_NAME")
+			if domainName == "" {
+				domainName = os.Getenv("OS_DOMAIN_NAME")
+				if domainName == "" {
+					domainName = os.Getenv("DEFAULT_DOMAIN")
+				}
+			}
+		}
+	}
+	c.domainname = domainName
+
 	path, ok := conf["path"]
 	if !ok || path == "" {
 		return fmt.Errorf("missing 'path' configuration")
 	}
+	c.path = path
+
 	insecure, ok := conf["insecure"]
 	if !ok {
 		insecure = os.Getenv("OS_INSECURE")
@@ -67,12 +149,14 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	c.insecure = insecureBool
 
 	ao := gophercloud.AuthOptions{
-		IdentityEndpoint: os.Getenv("OS_AUTH_URL"),
-		Username:         os.Getenv("OS_USERNAME"),
-		TenantName:       os.Getenv("OS_TENANT_NAME"),
-		Password:         os.Getenv("OS_PASSWORD"),
-		DomainName:       os.Getenv("OS_DOMAIN_NAME"),
-		DomainID:         os.Getenv("OS_DOMAIN_ID"),
+		IdentityEndpoint: c.authurl,
+		UserID:           c.userid,
+		Username:         c.username,
+		TenantID:         c.tenantid,
+		TenantName:       c.tenantname,
+		Password:         c.password,
+		DomainID:         c.domainid,
+		DomainName:       c.domainname,
 	}
 
 	provider, err := openstack.NewClient(ao.IdentityEndpoint)
@@ -95,9 +179,8 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 		return err
 	}
 
-	c.path = path
 	c.client, err = openstack.NewObjectStorageV1(provider, gophercloud.EndpointOpts{
-		Region: os.Getenv("OS_REGION_NAME"),
+		Region: c.region,
 	})
 
 	return err
