@@ -1771,12 +1771,6 @@
 			"revision": "42fa80f2ac6ed17a977ce826074bd3009593fa9d"
 		},
 		{
-			"checksumSHA1": "4Q/JrLYYcwGRPVpd6sJ5yW/E9GQ=",
-			"path": "github.com/rackspace/gophercloud",
-			"revision": "985a863d6dd5f928b485dbc8ef440813aafa39ad",
-			"revisionTime": "2016-06-23T23:57:31Z"
-		},
-		{
 			"checksumSHA1": "dh2tsaicjrx9LgR6uuSeilSFzAY=",
 			"path": "github.com/rackspace/gophercloud/openstack",
 			"revision": "985a863d6dd5f928b485dbc8ef440813aafa39ad",
