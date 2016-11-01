@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/md5"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -22,9 +24,12 @@ const TFSTATE_NAME = "tfstate.tf"
 type SwiftClient struct {
 	client     *gophercloud.ServiceClient
 	authurl    string
+	cacert     string
+	cert       string
 	domainid   string
 	domainname string
 	insecure   bool
+	key        string
 	password   string
 	path       string
 	region     string
@@ -149,6 +154,24 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 	}
 	c.insecure = insecureBool
 
+	cacertFile, ok := conf["cacert_file"]
+	if !ok {
+		cacertFile = os.Getenv("OS_CACERT")
+	}
+	c.cacert = cacertFile
+
+	cert, ok := conf["cert"]
+	if !ok {
+		cert = os.Getenv("OS_CERT")
+	}
+	c.cert = cert
+
+	key, ok := conf["key"]
+	if !ok {
+		key = os.Getenv("OS_KEY")
+	}
+	c.key = key
+
 	ao := gophercloud.AuthOptions{
 		IdentityEndpoint: c.authurl,
 		UserID:           c.userid,
@@ -167,9 +190,30 @@ func (c *SwiftClient) validateConfig(conf map[string]string) (err error) {
 
 	config := &tls.Config{}
 
+	if c.cacert != "" {
+		caCert, err := ioutil.ReadFile(c.cacert)
+		if err != nil {
+			return err
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		config.RootCAs = caCertPool
+	}
+
 	if c.insecure {
 		log.Printf("[DEBUG] Insecure mode set")
 		config.InsecureSkipVerify = true
+	}
+
+	if c.cert != "" && c.key != "" {
+		cert, err := tls.LoadX509KeyPair(c.cert, c.key)
+		if err != nil {
+			return err
+		}
+
+		config.Certificates = []tls.Certificate{cert}
+		config.BuildNameToCertificate()
 	}
 
 	transport := &http.Transport{Proxy: http.ProxyFromEnvironment, TLSClientConfig: config}
