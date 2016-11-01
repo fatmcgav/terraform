@@ -22,15 +22,16 @@ const TFSTATE_NAME = "tfstate.tf"
 type SwiftClient struct {
 	client     *gophercloud.ServiceClient
 	authurl    string
-	username   string
+	domainid   string
+	domainname string
+	insecure   bool
 	password   string
+	path       string
 	region     string
 	tenantid   string
 	tenantname string
-	domainid   string
-	domainname string
-	path       string
-	insecure   bool
+	userid     string
+	username   string
 }
 
 func swiftFactory(conf map[string]string) (Client, error) {
