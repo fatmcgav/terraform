@@ -292,8 +292,10 @@ func (c *SwiftClient) Put(data []byte) error {
 		Content: reader,
 	}
 
-	log.Printf("[DEBUG] ExpireSecs = %d", c.expireSecs)
-	createOpts.DeleteAfter = c.expireSecs
+	if c.expireSecs != "" {
+		log.Printf("[DEBUG] ExpireSecs = %d", c.expireSecs)
+		createOpts.DeleteAfter = c.expireSecs
+	}
 
 	result := objects.Create(c.client, c.path, TFSTATE_NAME, createOpts)
 
