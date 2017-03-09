@@ -7,6 +7,7 @@ import (
 
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/firewalls"
+	"github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/routerinsertion"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
@@ -57,6 +58,12 @@ func resourceFWFirewallV1() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"associated_routers": &schema.Schema{
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				// Set:      schema.HashString,
+			},
 			"value_specs": &schema.Schema{
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -76,15 +83,39 @@ func resourceFWFirewallV1Create(d *schema.ResourceData, meta interface{}) error 
 
 	adminStateUp := d.Get("admin_state_up").(bool)
 
-	firewallConfiguration := FirewallCreateOpts{
-		firewalls.CreateOpts{
-			Name:         d.Get("name").(string),
-			Description:  d.Get("description").(string),
-			PolicyID:     d.Get("policy_id").(string),
-			AdminStateUp: &adminStateUp,
-			TenantID:     d.Get("tenant_id").(string),
-		},
-		MapValueSpecs(d),
+	firewallCreateOpts := firewalls.CreateOpts{
+		Name:         d.Get("name").(string),
+		Description:  d.Get("description").(string),
+		PolicyID:     d.Get("policy_id").(string),
+		AdminStateUp: &adminStateUp,
+		TenantID:     d.Get("tenant_id").(string),
+	}
+
+	var firewallConfiguration firewalls.CreateOptsBuilder
+	associatedRoutersRaw := d.Get("associated_routers").([]interface{})
+	log.Printf("[DEBUG] associated_routers: %#v", associatedRoutersRaw)
+	log.Printf("[DEBUG] associated_routers count: %d", len(associatedRoutersRaw))
+	if len(associatedRoutersRaw) > 0 {
+		log.Printf("[DEBUG] Need to associate Firewall with router(s): %+v", associatedRoutersRaw)
+
+		associatedRouters := make([]string, len(associatedRoutersRaw))
+		for i, raw := range associatedRoutersRaw {
+			associatedRouters[i] = raw.(string)
+		}
+
+		log.Printf("Initial firewallCreateOpts: %#v", firewallCreateOpts)
+		firewallConfiguration = FirewallCreateOptsExt{
+			routerinsertion.CreateOptsExt{
+				firewallCreateOpts,
+				associatedRouters,
+			},
+			MapValueSpecs(d),
+		}
+	} else {
+		firewallConfiguration = FirewallCreateOpts{
+			firewallCreateOpts,
+			MapValueSpecs(d),
+		}
 	}
 
 	log.Printf("[DEBUG] Create firewall: %#v", firewallConfiguration)
