@@ -1712,6 +1712,12 @@
 			"revisionTime": "2017-03-10T01:59:53Z"
 		},
 		{
+			"checksumSHA1": "vyq6wfy/8DQ1mEHt90M9oMRtFEQ=",
+			"path": "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/routerinsertion",
+			"revision": "303bf8a5e44befcf262f4d0502f7343f64c52d8e",
+			"revisionTime": "2017-03-02T18:23:34Z"
+		},
+		{
 			"checksumSHA1": "sYET5A7WTyJ7dpuxR/VXYoReldw=",
 			"path": "github.com/gophercloud/gophercloud/openstack/networking/v2/extensions/fwaas/rules",
 			"revision": "0f64da0e36de86a0ca1a8f2fc1b0570a0d3f7504",
