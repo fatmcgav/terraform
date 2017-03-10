@@ -149,13 +149,34 @@ func (lrt *LogRoundTripper) formatJSON(raw []byte) string {
 // FirewallCreateOpts represents the attributes used when creating a new firewall.
 type FirewallCreateOpts struct {
 	firewalls.CreateOpts
+	RouterIDs  []string          `json:"router_ids,omitempty"`
 	ValueSpecs map[string]string `json:"value_specs,omitempty"`
 }
 
 // ToFirewallCreateMap casts a CreateOpts struct to a map.
 // It overrides firewalls.ToFirewallCreateMap to add the ValueSpecs field.
+// func (opts FirewallCreateOpts) ToFirewallCreateMap() (map[string]interface{}, error) {
+// 	return BuildRequest(opts, "firewall")
+// }
+// ToFirewallCreateMap casts a CreateOptsExt struct to a map.
+// It overrides firewalls.ToFirewallCreateMap to add the ValueSpecs field.
 func (opts FirewallCreateOpts) ToFirewallCreateMap() (map[string]interface{}, error) {
-	return BuildRequest(opts, "firewall")
+	// b, err := opts.CreateOptsBuilder.ToFirewallCreateMap()
+	b, err := BuildRequest(opts, "firewall")
+	log.Printf("[DEBUG] Body looks like: %#v", b)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(opts.RouterIDs) == 0 {
+		log.Print("[DEBUG] No RouterIDs provided")
+		return b, nil
+	}
+
+	firewallMap := b["firewall"].(map[string]interface{})
+	firewallMap["router_ids"] = opts.RouterIDs
+
+	return b, nil
 }
 
 // FirewallCreateOptsExt represents the attributes used when creating a new firewall.
@@ -176,6 +197,30 @@ func (opts FirewallCreateOptsExt) ToFirewallCreateMap() (map[string]interface{},
 
 	if len(opts.RouterIDs) == 0 {
 		log.Print("[DEBUG] No RouterIDs provided")
+		return b, nil
+	}
+
+	firewallMap := b["firewall"].(map[string]interface{})
+	firewallMap["router_ids"] = opts.RouterIDs
+
+	return b, nil
+}
+
+//FirewallUpdateOpts
+type FirewallUpdateOpts struct {
+	firewalls.UpdateOpts
+	RouterIDs []string `json:"router_ids,omitempty"`
+	// routerinsertion.UpdateOptsExt
+}
+
+func (opts FirewallUpdateOpts) ToFirewallUpdateMap() (map[string]interface{}, error) {
+	// b, err := opts.UpdateOptsBuilder.ToFirewallUpdateMap()
+	b, err := BuildRequest(opts, "firewall")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(opts.RouterIDs) == 0 {
 		return b, nil
 	}
 
