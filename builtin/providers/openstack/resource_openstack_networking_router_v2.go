@@ -53,6 +53,11 @@ func resourceNetworkingRouterV2() *schema.Resource {
 				Optional: true,
 				ForceNew: false,
 			},
+			"update_external_gateway": &schema.Schema{
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"tenant_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
@@ -93,6 +98,20 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 		createOpts.Distributed = &d
 	}
 
+	// Handle assigning external gateway after router creation
+	var ueg bool
+	if uegRaw, ok := d.GetOk("update_external_gateway"); ok {
+		ueg = uegRaw.(bool)
+	}
+
+	externalGateway := d.Get("external_gateway").(string)
+	if externalGateway != "" && !ueg {
+		gatewayInfo := routers.GatewayInfo{
+			NetworkID: externalGateway,
+		}
+		createOpts.GatewayInfo = &gatewayInfo
+	}
+
 	log.Printf("[DEBUG] Create Options: %#v", createOpts)
 	n, err := routers.Create(networkingClient, createOpts).Extract()
 	if err != nil {
@@ -114,17 +133,14 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(n.ID)
 
-	// GW - Hack to set External Gateway config AFTER creating router, as K5
-	// can't perform this as one idempotent task!!!
-	externalGateway := d.Get("external_gateway").(string)
-	if externalGateway != "" {
+	if ueg {
 		var updateOpts routers.UpdateOpts
 		gatewayInfo := routers.GatewayInfo{
 			NetworkID: externalGateway,
 		}
 		updateOpts.GatewayInfo = &gatewayInfo
 
-		log.Printf("[DEBUG] Assigning external gateway to Router %s with options: %+v", d.Id(), updateOpts)
+		log.Printf("[DEBUG] Updating external gateway to Router %s with options: %+v", d.Id(), updateOpts)
 
 		_, err = routers.Update(networkingClient, d.Id(), updateOpts).Extract()
 		if err != nil {
