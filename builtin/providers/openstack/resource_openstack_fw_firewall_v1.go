@@ -74,7 +74,7 @@ func resourceFWFirewallV1() *schema.Resource {
 	}
 }
 
-// Firewall is an OpenStack firewall.
+// Firewall is an OpenStack firewall, extented to add RouterIDs field.
 type Firewall struct {
 	ID           string   `json:"id"`
 	Name         string   `json:"name"`
