@@ -99,10 +99,7 @@ func resourceNetworkingRouterV2Create(d *schema.ResourceData, meta interface{}) 
 	}
 
 	// Handle assigning external gateway after router creation
-	var ueg bool
-	if uegRaw, ok := d.GetOk("update_external_gateway"); ok {
-		ueg = uegRaw.(bool)
-	}
+	ueg := d.Get("update_external_gateway").(bool)
 
 	externalGateway := d.Get("external_gateway").(string)
 	if externalGateway != "" && !ueg {
